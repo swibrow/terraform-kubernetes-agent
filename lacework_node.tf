@@ -91,25 +91,30 @@ resource "kubernetes_daemonset" "lacework_datacollector" {
       }
 
       spec {
-
         affinity {
           node_affinity {
-            required_during_scheduling_ignored_during_execution {
-              node_selector_term {
-                match_expressions {
-                  key      = "kubernetes.io/arch"
-                  operator = "In"
-                  values = [
-                    "amd64",
-                    "arm64"
-                  ]
+            dynamic "required_during_scheduling_ignored_during_execution" {
+              for_each = var.node_affinity.required
+              content {
+                node_selector_term {
+                  match_expressions {
+                    key      = required_during_scheduling_ignored_during_execution.value.key
+                    operator = required_during_scheduling_ignored_during_execution.value.operator
+                    values   = required_during_scheduling_ignored_during_execution.value.values
+                  }
                 }
-                match_expressions {
-                  key      = "kubernetes.io/os"
-                  operator = "In"
-                  values = [
-                    "linux"
-                  ]
+              }
+            }
+            dynamic "preferred_during_scheduling_ignored_during_execution" {
+              for_each = var.node_affinity.preferred
+              content {
+                weight     = preferred_during_scheduling_ignored_during_execution.value.weight
+                preference {
+                  match_expressions {
+                    key      = preferred_during_scheduling_ignored_during_execution.value.key
+                    operator = preferred_during_scheduling_ignored_during_execution.value.operator
+                    values   = preferred_during_scheduling_ignored_during_execution.value.values
+                  }
                 }
               }
             }
